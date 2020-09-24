@@ -1,0 +1,144 @@
+---
+title: "Untitled"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+#install.packages("vosonSML")
+#install.packages(c("tidyr", "tidytext", "stopwords"))
+#install.packages("ggplot2")
+
+#install.packages("igraph")
+
+#install.packages("visNetwork")
+library(ggplot2)
+library(visNetwork)
+library(igraph)
+library(tidyr)
+library(tidytext)
+library(stopwords)
+library(vosonSML)
+library(twitteR)
+
+
+
+myApp <- list(appName = "MyApp" , apiKey = "Rh9hkyRwU4wgIp42xg9B3TH2w",
+apiSecret = "dH8wc8JAx8Y6W2aVnVeLOxOrNd3JGMueplI6cRAXFqJP00ZSwf", accessToken = "1194769030311219200-jBJCGpgLbFHtEc4znVCZkKTyQjCv7v",
+accessTokenSecret = "sCCbK3HOivSxR1IvYPbYrLB6vtESba1AsI7R0SDAJFJSE"
+)
+
+twitter_auth<- Authenticate("twitter", appName = myApp$appName, apiKey = myApp$apiKey, apiSecret = myApp$apiSecret, accessToken = myApp$accessToken,
+accessTokenSecret = myApp$accessTokenSecret)
+```
+
+
+```{r}
+myTwitterData <- twitter_auth %>%
+Collect(searchTerm = c("#breitbart","#onion"), searchType = "recent", numTweets = 300, verbose = TRUE,
+includeRetweets = TRUE, retryOnRateLimit = TRUE, writeToFile = TRUE)
+
+
+
+
+collabdata<- twitter_auth%>%
+  Collect(searchTerm = "onion", searchType = "recent", numTweets = 300, verbose = TRUE,includeRetweets = TRUE, retryOnRateLimit = TRUE, writeToFile = TRUE)
+
+
+```
+
+
+```{r}
+activityNetwork <- myTwitterData %>% Create("activity") 
+actorNetwork <- myTwitterData %>% Create("actor") 
+#%>%
+#AddUserData(actorNetwork, collabdata, verbose = TRUE, twitterAuth = twitter_auth)
+
+
+```
+
+```{r}
+AddUserData(actorNetwork, collabdata, verbose = TRUE, twitterAuth = twitter_auth)
+
+```
+
+
+
+```{r}
+semanticNetwork <- myTwitterData %>%
+Create("semantic", 
+  removeTermsOrHashtags = c("#breitbart"),
+  stopwords = TRUE,
+  stopwordsLang = "en",
+  stopwordsSrc = "smart",
+  removeNumbers = TRUE,
+  removeUrls = TRUE,
+
+  termFreq = 2, 
+  hashtagFreq = 10, 
+  verbose = TRUE)
+
+
+
+twomodeNetwork <- myTwitterData %>%
+Create("twomode", 
+  removeTermsOrHashtags = c("#breitbart"),
+  stopwords = TRUE,
+  stopwordsLang = "en",
+  stopwordsSrc = "smart",
+  removeNumbers = TRUE,
+  removeUrls = TRUE,
+  
+  termFreq = 2, 
+  hashtagFreq = 10,  verbose = TRUE)
+
+activityNetwork$nodes
+
+
+```
+
+
+```{r}
+x <-Graph(twomodeNetwork, directed = TRUE, writeToFile = FALSE)
+#y <- Graph(semanticNetwork, directed = TRUE)
+twomodeNetwork
+
+actorgraph <- Graph(actorNetwork, directed = TRUE)
+activitygraph <- Graph(activityNetwork, directed = TRUE)
+visIgraph(x,layout = "layout_nicely")%>% visOptions(highlightNearest = TRUE,selectedBy = "group", nodesIdSelection = TRUE)
+
+#visIgraph(y, layout = "layout_nicely")
+visIgraph(actorgraph, layout = "layout_nicely")
+visIgraph(activitygraph, layout = "layout_nicely")
+
+
+
+```
+
+
+```{r}
+deg <- degree(x, v = V(x), mode = c("all", "out", "in", "total"),
+  loops = TRUE, normalized = FALSE)
+
+g.deg.hist<- degree_distribution(x)
+
+
+
+hist(g.deg.hist)
+
+
+cc<-transitivity(x, type = c("undirected", "global", "globalundirected",
+  "localundirected", "local", "average", "localaverage",
+  "localaverageundirected", "barrat", "weighted"), vids = NULL,
+  weights = NULL, isolates = c("NaN", "zero"))
+
+
+cc2<- transitivity(actorgraph, type = c("undirected", "global", "globalundirected",
+  "localundirected", "local", "average", "localaverage",
+  "localaverageundirected", "barrat", "weighted"), vids = NULL,
+  weights = NULL, isolates = c("NaN", "zero"))
+
+
+
+```

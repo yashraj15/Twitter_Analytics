@@ -1,18 +1,20 @@
 ---
-title: "Untitled"
+title: "OSNA_project1"
 output:
   html_document: default
   pdf_document: default
 ---
 
 ```{r}
+# Packages to be installed
 #install.packages("vosonSML")
 #install.packages(c("tidyr", "tidytext", "stopwords"))
 #install.packages("ggplot2")
-
 #install.packages("igraph")
-
 #install.packages("visNetwork")
+#install.packages("bipartite")
+
+# Access to packages
 library(ggplot2)
 library(visNetwork)
 library(igraph)
@@ -21,75 +23,49 @@ library(tidytext)
 library(stopwords)
 library(vosonSML)
 library(twitteR)
+library(bipartite)
 
 
-
+# Twitter Authentication
 myApp <- list(appName = "MyApp" , apiKey = "Rh9hkyRwU4wgIp42xg9B3TH2w",
 apiSecret = "dH8wc8JAx8Y6W2aVnVeLOxOrNd3JGMueplI6cRAXFqJP00ZSwf", accessToken = "1194769030311219200-jBJCGpgLbFHtEc4znVCZkKTyQjCv7v",
 accessTokenSecret = "sCCbK3HOivSxR1IvYPbYrLB6vtESba1AsI7R0SDAJFJSE"
 )
 
-twitter_auth<- Authenticate("twitter", appName = myApp$appName, apiKey = myApp$apiKey, apiSecret = myApp$apiSecret, accessToken = myApp$accessToken,
+twitter_auth <- Authenticate("twitter", appName = myApp$appName, apiKey = myApp$apiKey, apiSecret = myApp$apiSecret, accessToken = myApp$accessToken,
 accessTokenSecret = myApp$accessTokenSecret)
 ```
 
 
 ```{r}
+# Collect Tweets
 myTwitterData <- twitter_auth %>%
-Collect(searchTerm = c("#breitbart","#onion"), searchType = "recent", numTweets = 300, verbose = TRUE,
+  Collect(searchTerm = "#MondayMotivation", searchType = "recent", numTweets = 300, verbose = TRUE,
 includeRetweets = TRUE, retryOnRateLimit = TRUE, writeToFile = TRUE)
 
 
-
-
-collabdata<- twitter_auth%>%
-  Collect(searchTerm = "onion", searchType = "recent", numTweets = 300, verbose = TRUE,includeRetweets = TRUE, retryOnRateLimit = TRUE, writeToFile = TRUE)
-
-
 ```
 
 
 ```{r}
+# Setup Activity and Actor Networks for comparison with Two-mode Network
 activityNetwork <- myTwitterData %>% Create("activity") 
-actorNetwork <- myTwitterData %>% Create("actor") 
-#%>%
-#AddUserData(actorNetwork, collabdata, verbose = TRUE, twitterAuth = twitter_auth)
+actorNetwork <- myTwitterData %>% Create("actor")
 
 
 ```
 
-```{r}
-AddUserData(actorNetwork, collabdata, verbose = TRUE, twitterAuth = twitter_auth)
-
-```
-
-
 
 ```{r}
-semanticNetwork <- myTwitterData %>%
-Create("semantic", 
-  removeTermsOrHashtags = c("#breitbart"),
-  stopwords = TRUE,
-  stopwordsLang = "en",
-  stopwordsSrc = "smart",
-  removeNumbers = TRUE,
-  removeUrls = TRUE,
-
-  termFreq = 2, 
-  hashtagFreq = 10, 
-  verbose = TRUE)
-
-
-
+# Two-mode network to be used for Network Analysis
 twomodeNetwork <- myTwitterData %>%
 Create("twomode", 
-  removeTermsOrHashtags = c("#breitbart"),
+  removeTermsOrHashtags = c("#MondayMotivation"),
   stopwords = TRUE,
   stopwordsLang = "en",
   stopwordsSrc = "smart",
   removeNumbers = TRUE,
   removeUrls = TRUE,
-  
   termFreq = 2, 
   hashtagFreq = 10,  verbose = TRUE)
 
@@ -100,41 +76,33 @@ activityNetwork$nodes
 
 
 ```{r}
+# Creation of graphs. Graph x is the graph used for analysis
+# ActorGraph and ActivityGraph merely to provide further context
 x <-Graph(twomodeNetwork, directed = TRUE, writeToFile = FALSE)
-#y <- Graph(semanticNetwork, directed = TRUE)
-twomodeNetwork
-
 actorgraph <- Graph(actorNetwork, directed = TRUE)
 activitygraph <- Graph(activityNetwork, directed = TRUE)
-visIgraph(x,layout = "layout_nicely")%>% visOptions(highlightNearest = TRUE,selectedBy = "group", nodesIdSelection = TRUE)
 
-#visIgraph(y, layout = "layout_nicely")
+# Print graphs
+visIgraph(x,layout = "layout_nicely")%>% visOptions(highlightNearest = TRUE,selectedBy = "group", nodesIdSelection = TRUE)
 visIgraph(actorgraph, layout = "layout_nicely")
 visIgraph(activitygraph, layout = "layout_nicely")
-
-
 
 ```
 
 
 ```{r}
-deg <- degree(x, v = V(x), mode = c("all", "out", "in", "total"),
-  loops = TRUE, normalized = FALSE)
-
+# Histogram
 g.deg.hist<- degree_distribution(x)
-
-
-
 hist(g.deg.hist)
 
-#diameter of the graph
+# Diameter of the graph
 diameter(x)
 
-#clustering coeffiecient
-edge2mode<-"as_edgelist"(x,names = FALSE)
+# Clustering coeffiecient
+edge2mode<-as_edgelist(x,names = FALSE)
 
-ccoeff<-clustering_tm(edge2mode)
-
+ccoeff <- clustering_tm(edge2mode)
+ccoeff
 
 
 

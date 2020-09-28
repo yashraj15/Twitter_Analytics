@@ -127,17 +127,14 @@ g.deg.hist<- degree_distribution(x)
 
 hist(g.deg.hist)
 
+#diameter of the graph
+diameter(x)
 
-cc<-transitivity(x, type = c("undirected", "global", "globalundirected",
-  "localundirected", "local", "average", "localaverage",
-  "localaverageundirected", "barrat", "weighted"), vids = NULL,
-  weights = NULL, isolates = c("NaN", "zero"))
+#clustering coeffiecient
+edge2mode<-"as_edgelist"(x,names = FALSE)
 
+ccoeff<-clustering_tm(edge2mode)
 
-cc2<- transitivity(actorgraph, type = c("undirected", "global", "globalundirected",
-  "localundirected", "local", "average", "localaverage",
-  "localaverageundirected", "barrat", "weighted"), vids = NULL,
-  weights = NULL, isolates = c("NaN", "zero"))
 
 
 

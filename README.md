@@ -6,6 +6,5 @@ The purpose of this project was to crawl through social media data and then run 
 2) RStudio
 3) Packages used: bipartite, ggplot2. igraph, visNetwork, tidyr, tidytext, stopwords, vosonSML
 
-
-# Open the .rmd file in RStudio
-# Run the entire code using Ctrl + Alt + R
+Open the .rmd file in RStudio
+Run the entire code using Ctrl + Alt + R

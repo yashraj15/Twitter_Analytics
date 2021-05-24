@@ -1,5 +1,5 @@
 # OSNA_project1
-The purpose of this project was to crawl through social media data and then run Graph algorithms on the acquired data to analyze and form patterns. 
+The purpose of this project was to crawl through Twitter data and then run Graph algorithms on the acquired data to analyze and form patterns. 
 
 # Prerequisites to run the project:
 1) R
